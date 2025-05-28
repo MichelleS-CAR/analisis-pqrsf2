@@ -187,7 +187,7 @@ if uploaded_file:
     st.markdown("### 📈 Gráfico de solicitudes por mes")
     plt.style.use('ggplot')
     plt.figure(figsize=(10, 6))
-    conteo_mensual.plot(kind='bar')
+    conteo_mensual.plot(kind='bar', color='blue')
     plt.title('Cantidad de solicitudes por mes')
     plt.xlabel('Mes')
     plt.ylabel('Número de solicitudes')
