@@ -104,25 +104,18 @@ if uploaded_file:
     df['Fecha creación'] = pd.to_datetime(df['Fecha creación'], errors='coerce')
 
     # --- FILTRO POR TIPO DE PACIENTE ---
-    opciones_tipo_paciente = ['Adulto', 'Pediatrico']
-    tipo_paciente_seleccionado = st.multiselect(
-    "Seleccione el tipo(s) de paciente",
-    opciones_tipo_paciente,
-    default=opciones_tipo_paciente  # Por defecto selecciona ambos
-)
-
+    opciones_tipo_paciente = ['Adulto', 'Pediatrico', 'Ambos']
+    tipo_paciente_seleccionado = st.radio("Seleccione tipo de paciente", opciones_tipo_paciente)
 
     if 'Tipo de paciente' in df.columns:
         df['Tipo de paciente'] = df['Tipo de paciente'].astype(str).str.strip().str.lower()
-        # Convertir selección a minúsculas para comparación
-        tipos_filtrados = [x.lower() for x in tipo_paciente_seleccionado]
-
-        if tipos_filtrados:
-            df = df[df['Tipo de paciente'].isin(tipos_filtrados)].copy()
+        if tipo_paciente_seleccionado == 'Ambos':
+           df_filtrado = df.copy()
         else:
-            st.warning("Debe seleccionar al menos un tipo de paciente para filtrar.")
+           df_filtrado = df[df['Tipo de paciente'] == tipo_paciente_seleccionado.lower()].copy()
     else:
         st.warning("La columna 'Tipo de paciente' no se encontró en el archivo, no se aplicará filtro.")
+        df_filtrado = df.copy()
 
     
     # --- Selección de fechas primero ---
