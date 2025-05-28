@@ -195,6 +195,14 @@ if uploaded_file:
     ax.set_ylabel('Número de solicitudes')
     plt.xticks(rotation=45)
     plt.grid(axis='y')
+
+    # Añadir valores numéricos encima de las barras
+    for p in ax.patches:
+          height = p.get_height()
+          ax.annotate(f'{int(height)}',
+                (p.get_x() + p.get_width() / 2, height),
+                ha='center', va='bottom')
+
     plt.tight_layout()
     st.pyplot(fig)
 
@@ -248,8 +256,17 @@ if uploaded_file:
             ax2.set_ylabel("Cantidad")
             ax2.set_title("Conteo por Tipo de Requerimiento y Servicio Afectado")
             plt.xticks(rotation=45)
+
+            # Añadir valores numéricos encima de las barras
+            for p in ax2.patches:
+                height = p.get_height()
+                ax2.annotate(f'{int(height)}',
+                 (p.get_x() + p.get_width() / 2, height),
+                 ha='center', va='bottom')
+
             plt.tight_layout()
             st.pyplot(fig2)
+   
 
         # Mostrar tabla de personal implicado por servicio
         for servicio_buscado in servicios_buscados:
