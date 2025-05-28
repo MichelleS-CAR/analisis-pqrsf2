@@ -197,46 +197,74 @@ if uploaded_file:
     st.pyplot(plt)
 
     # Gráfico por servicio afectado
-    servicio_buscado = st.text_input("Introduce el nombre del Servicio Afectado a visualizar (para gráfico)")
+    servicios_buscados = st.multiselect(
+        "Selecciona uno o varios Servicios Afectados para visualizar gráfico comparativo",
+        options=df['Servicio afectado'].dropna().unique()
+    )
 
-    if servicio_buscado:
-        texto_busqueda = servicio_buscado.strip().lower()
-
+    if servicios_buscados:
         def servicio_en_fila(celda):
             if pd.isna(celda):
                 return False
             servicios = []
             for sep in [';', ',']:
-                servicios += [s.strip().lower() for s in celda.split(sep)]
+                servicios += [s.strip() for s in celda.split(sep)]
             servicios = list(set(servicios))
-            return any(texto_busqueda in s for s in servicios)
+            return any(servicio in servicios for servicio in servicios_buscados)
 
-        df_servicio = df[df['Servicio afectado'].apply(servicio_en_fila)]
+        df_filtrado = df[df['Servicio afectado'].apply(servicio_en_fila)]
 
-        if df_servicio.empty:
-            st.warning(f"No se encontraron datos para el servicio '{servicio_buscado}'.")
+        if df_filtrado.empty:
+            st.warning("No se encontraron datos para los servicios seleccionados.")
         else:
-            conteo_servicio = df_servicio['Tipo de requerimiento'].value_counts().sort_values(ascending=False)
+            # Expandir filas para cada servicio afectado si hay múltiples en una celda
+            filas = []
+            for _, row in df_filtrado.iterrows():
+                tipos = row['Tipo de requerimiento']
+                servicios_celda = []
+                if pd.notna(row['Servicio afectado']):
+                    for sep in [';', ',']:
+                        servicios_celda += [s.strip() for s in str(row['Servicio afectado']).split(sep)]
+                for servicio in servicios_celda:
+                    filas.append({
+                        'Tipo de requerimiento': tipos,
+                        'Servicio afectado': servicio
+                    })
 
-            fig_serv, ax_serv = plt.subplots()
-            bars = ax_serv.bar(conteo_servicio.index, conteo_servicio.values)
-            ax_serv.set_title(f'Conteo de tipos de requerimiento para el servicio "{servicio_buscado}"')
-            ax_serv.set_xlabel('Tipo de requerimiento')
-            ax_serv.set_ylabel('Cantidad')
+            df_exp = pd.DataFrame(filas)
 
-            for bar in bars:
-                yval = bar.get_height()
-                ax_serv.text(bar.get_x() + bar.get_width()/2, yval + 0.5, int(yval), ha='center')
+            tabla_pivot = pd.pivot_table(
+                df_exp,
+                index='Tipo de requerimiento',
+                columns='Servicio afectado',
+                aggfunc=len,
+                fill_value=0
+            )
 
-            st.pyplot(fig_serv)
+            # Ordenar columnas según selección del usuario para mejor visualización
+            tabla_pivot = tabla_pivot.loc[:, [s for s in servicios_buscados if s in tabla_pivot.columns]]
 
-            if 'Personal implicado' in df_servicio.columns:
-                df_servicio['Personal implicado'] = df_servicio['Personal implicado'].fillna('')
-                servicio_personal_relacionado = df_servicio[['Servicio afectado', 'Personal implicado', 'Tipo de requerimiento']]
-                st.subheader(f'Relación de Servicio Afectado con Personal Implicado para el servicio "{servicio_buscado}"')
-                st.dataframe(servicio_personal_relacionado)
-            else:
-                 st.info("No se encontró información de 'Personal implicado' para este servicio.")
+            # Graficar barras agrupadas
+            ax = tabla_pivot.plot(kind="bar", figsize=(10,6))
+
+            ax.set_xlabel("Tipo de requerimiento")  # Eje X
+            ax.set_ylabel("Cantidad")                # Eje Y
+            ax.set_title("Conteo por Tipo de Requerimiento y Servicio Afectado")
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+
+            st.pyplot(ax.figure)
+
+        
+    for servicio_buscado in servicios_buscados:
+        df_servicio = df[df['Servicio afectado'].str.contains(servicio_buscado, case=False, na=False)]
+        if 'Personal implicado' in df_servicio.columns:
+            df_servicio['Personal implicado'] = df_servicio['Personal implicado'].fillna('')
+            servicio_personal_relacionado = df_servicio[['Servicio afectado', 'Personal implicado', 'Tipo de requerimiento']]
+            st.subheader(f'Relación de Servicio Afectado con Personal Implicado para el servicio "{servicio_buscado}"')
+            st.dataframe(servicio_personal_relacionado)
+        else:
+            st.info(f"No se encontró información de 'Personal implicado' para el servicio '{servicio_buscado}'.")
 
 
     # Consulta de peticiones por especialidad
