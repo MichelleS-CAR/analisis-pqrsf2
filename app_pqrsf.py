@@ -104,15 +104,15 @@ if uploaded_file:
     df['Fecha creación'] = pd.to_datetime(df['Fecha creación'], errors='coerce')
 
     # --- FILTRO POR TIPO DE PACIENTE ---
-    opciones_tipo_paciente = ['Adulto', 'Pediátrico']
+    opciones_tipo_paciente = ['Adulto', 'Pediatrico']
     tipo_paciente_seleccionado = st.selectbox("Seleccione el tipo de paciente", opciones_tipo_paciente)
 
     if 'Tipo de paciente' in df.columns:
-        df['Tipo de paciente'] = df['Tipo de paciente'].astype(str).str.strip().str.capitalize()
-        df = df[df['Tipo de paciente'] == tipo_paciente_seleccionado]
+        df['Tipo de paciente'] = df['Tipo de paciente'].astype(str).str.strip().str.lower()
+        tipo_paciente_filtrado = tipo_paciente_seleccionado.lower()
+        df = df[df['Tipo de paciente'] == tipo_paciente_filtrado].copy()
     else:
         st.warning("La columna 'Tipo de paciente' no se encontró en el archivo, no se aplicará filtro.")
-    
     # --- Selección de fechas primero ---
     col1, col2 = st.columns(2)
     with col1:
