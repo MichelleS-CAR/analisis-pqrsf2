@@ -306,6 +306,7 @@ if uploaded_file:
     # --- CONSULTA DETALLADA DE QUEJAS POR CLASIFICACIÓN Y ESTADO ---
     st.subheader("Consulta detallada de Quejas por Clasificación y Estado")
     servicio_quejas = st.text_input("Ingrese el Servicio afectado para consulta detallada de quejas")
+    st.info("Debe buscar o escribir el servicio afectado tal cual como está en la base de datos que usted subió.")
 
     if servicio_quejas:
         df_quejas = df_filtrado[df_filtrado['Tipo de requerimiento'].str.lower() == 'queja']
